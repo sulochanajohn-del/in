@@ -1,13 +1,4 @@
 {
-  "name": "SocialHub",
-  "description": "A full-stack social media app like Instagram and Snapchat combined",
-  "version": "1.0.0",
-  "buildCommand": "next build",
-  "env": {},
-  "functions": {
-    "api/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 60
-    }
-  }
+{\n  "buildCommand": "npm install && next build",
+  "installCommand": "npm install"
 }
