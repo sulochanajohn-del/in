@@ -40,7 +40,7 @@ export function Profile() {
   return (
     <div className="space-y-4">
       {/* Profile Header */}
-      <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700 transition-colors">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-start gap-4">
             <img
@@ -55,26 +55,26 @@ export function Profile() {
                     type="text"
                     value={editData.username}
                     onChange={(e) => setEditData({ ...editData, username: e.target.value })}
-                    className="block w-full px-3 py-2 border rounded-lg"
+                    className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-black dark:text-white rounded-lg transition-colors"
                     placeholder="Username"
                   />
                   <textarea
                     value={editData.bio}
                     onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
-                    className="block w-full px-3 py-2 border rounded-lg"
+                    className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-black dark:text-white rounded-lg transition-colors"
                     placeholder="Bio"
                     rows={3}
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={handleSave}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                      className="px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
                     >
                       Save
                     </button>
                     <button
                       onClick={() => setIsEditing(false)}
-                      className="px-4 py-2 bg-gray-300 text-gray-900 rounded-lg hover:bg-gray-400"
+                      className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
                     >
                       Cancel
                     </button>
@@ -82,9 +82,9 @@ export function Profile() {
                 </div>
               ) : (
                 <div>
-                  <h1 className="text-2xl font-bold">{currentUser.username}</h1>
-                  <p className="text-gray-600">{currentUser.bio}</p>
-                  <p className="text-sm text-gray-500 mt-2">
+                  <h1 className="text-2xl font-bold text-black dark:text-white">{currentUser.username}</h1>
+                  <p className="text-gray-600 dark:text-gray-400">{currentUser.bio}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                     {currentUser.email}
                   </p>
                 </div>

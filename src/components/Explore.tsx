@@ -25,24 +25,24 @@ export function Explore() {
   return (
     <div className="space-y-4">
       {/* Search */}
-      <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 transition-colors">
         <input
           type="text"
           placeholder="Search users..."
-          className="w-full px-4 py-2 bg-gray-100 rounded-full outline-none"
+          className="w-full px-4 py-2 bg-gray-100 dark:bg-slate-800 text-black dark:text-white rounded-full outline-none transition-colors placeholder:text-gray-500 dark:placeholder:text-gray-400"
         />
       </div>
 
       {/* Suggested Users */}
-      <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 transition-colors">
+        <div className="flex items-center gap-2 mb-4 text-black dark:text-white">
           <Users size={20} />
           <h3 className="font-bold text-lg">Suggested For You</h3>
         </div>
 
         <div className="space-y-3">
           {suggestedUsers.map((user) => (
-            <div key={user.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded">
+            <div key={user.id} className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-slate-800 rounded transition-colors">
               <div className="flex items-center gap-3 flex-1">
                 <img
                   src={user.avatar || 'https://i.pravatar.cc/150'}
@@ -50,17 +50,17 @@ export function Explore() {
                   className="w-12 h-12 rounded-full"
                 />
                 <div className="flex-1">
-                  <p className="font-semibold">{user.username}</p>
-                  <p className="text-sm text-gray-500">{user.followers.length} followers</p>
-                  {user.bio && <p className="text-sm text-gray-600">{user.bio}</p>}
+                  <p className="font-semibold text-black dark:text-white">{user.username}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{user.followers.length} followers</p>
+                  {user.bio && <p className="text-sm text-gray-600 dark:text-gray-400">{user.bio}</p>}
                 </div>
               </div>
               <button
                 onClick={() => toggleFollow(user.id)}
                 className={`px-4 py-2 rounded-full font-semibold flex items-center gap-2 transition ${
                   following.has(user.id)
-                    ? 'bg-gray-200 text-gray-900 hover:bg-gray-300'
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                    ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600'
+                    : 'bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-700'
                 }`}
               >
                 {following.has(user.id) ? (

@@ -14,7 +14,7 @@ export function Stories() {
       <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
         <button
           onClick={() => setCurrentStoryIndex(null)}
-          className="absolute top-4 right-4 bg-white rounded-full p-2 text-gray-900 hover:bg-gray-200"
+          className="absolute top-4 right-4 bg-white dark:bg-gray-800 rounded-full p-2 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
         >
           <X size={24} />
         </button>
@@ -82,8 +82,8 @@ export function Stories() {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
-      <h3 className="font-bold mb-3">Stories</h3>
+    <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 transition-colors">
+      <h3 className="font-bold mb-3 text-black dark:text-white">Stories</h3>
       <div className="flex gap-3 overflow-x-auto pb-2">
         {stories.map((story, idx) => (
           <button
@@ -91,7 +91,7 @@ export function Stories() {
             onClick={() => setCurrentStoryIndex(idx)}
             className="flex-shrink-0 relative"
           >
-            <div className="w-24 h-32 rounded-lg overflow-hidden border-2 border-blue-500 hover:border-blue-600">
+            <div className="w-24 h-32 rounded-lg overflow-hidden border-2 border-blue-500 hover:border-blue-600 transition-colors">
               <img
                 src={story.image}
                 alt={story.username}
