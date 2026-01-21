@@ -1,99 +1,79 @@
 'use client';
 
 import { useStore } from '@/store/store';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export function Login() {
-  const { setCurrentUser, setUsers, users } = useStore();
+  const { setCurrentUser, setToken } = useStore();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Mock default users
-  const defaultUsers = [
-    {
-      id: '1',
-      username: 'john_doe',
-      email: 'john@example.com',
-      avatar: 'https://i.pravatar.cc/150?img=1',
-      bio: 'Photography enthusiast 📸',
-      followers: ['2', '3'],
-      following: ['2'],
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      username: 'jane_smith',
-      email: 'jane@example.com',
-      avatar: 'https://i.pravatar.cc/150?img=2',
-      bio: 'Travel & lifestyle blogger',
-      followers: ['1', '3'],
-      following: ['1', '3'],
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: '3',
-      username: 'alex_tech',
-      email: 'alex@example.com',
-      avatar: 'https://i.pravatar.cc/150?img=3',
-      bio: 'Tech enthusiast & developer',
-      followers: ['1'],
-      following: ['2'],
-      createdAt: new Date().toISOString(),
-    },
-  ];
-
-  // Initialize default users if empty
-  useEffect(() => {
-    if (users.length === 0) {
-      setUsers(defaultUsers);
-    }
-  }, []);
-
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setError('');
-    const user = users.find(
-      (u) => (u.email === email || u.username === email) && u.id
-    );
-    if (user) {
-      setCurrentUser(user);
-    } else {
-      setError('User not found. Try: jane@example.com or jane_smith');
+    setLoading(true);
+    try {
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, isSignUp: false }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Login failed');
+        setLoading(false);
+        return;
+      }
+
+      setCurrentUser(data.user);
+      setToken(data.token);
+      setEmail('');
+      setPassword('');
+    } catch (err) {
+      setError('Connection error. Check if backend is running.');
+      console.error(err);
     }
+    setLoading(false);
   };
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     setError('');
-    if (!email || !username) {
+    if (!email || !username || !password) {
       setError('Please fill in all fields');
       return;
     }
 
-    // Check if user already exists
-    if (users.some((u) => u.email === email || u.username === username)) {
-      setError('Email or username already exists');
-      return;
+    setLoading(true);
+    try {
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, username, password, isSignUp: true }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Signup failed');
+        setLoading(false);
+        return;
+      }
+
+      setCurrentUser(data.user);
+      setToken(data.token);
+      setEmail('');
+      setUsername('');
+      setPassword('');
+    } catch (err) {
+      setError('Connection error. Check if backend is running.');
+      console.error(err);
     }
-
-    const newUser = {
-      id: Date.now().toString(),
-      username,
-      email,
-      avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 100)}`,
-      bio: '',
-      followers: [],
-      following: [],
-      createdAt: new Date().toISOString(),
-    };
-
-    const updatedUsers = [...users, newUser];
-    setUsers(updatedUsers);
-    setCurrentUser(newUser);
-    setEmail('');
-    setUsername('');
-    setPassword('');
+    setLoading(false);
   };
 
   return (
@@ -161,40 +141,15 @@ export function Login() {
 
             <button
               onClick={isSignUp ? handleSignUp : handleLogin}
-              className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-lg hover:from-blue-600 hover:to-purple-700 transition"
+              disabled={loading}
+              className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-lg hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 transition"
             >
-              {isSignUp ? 'Create Account' : 'Login'}
+              {loading ? 'Loading...' : isSignUp ? 'Create Account' : 'Login'}
             </button>
           </div>
 
-          {/* Demo Users */}
-          <div className="mt-6 pt-6 border-t">
-            <p className="text-sm text-gray-600 text-center mb-3">Quick Login - Demo Users:</p>
-            <div className="space-y-2">
-              {users.map((user) => (
-                <button
-                  key={user.id}
-                  onClick={() => {
-                    setCurrentUser(user);
-                    setError('');
-                  }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm"
-                >
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={user.avatar}
-                      alt={user.username}
-                      className="w-6 h-6 rounded-full"
-                    />
-                    <span>{user.username}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Toggle SignUp/Login */}
-          <p className="text-center text-sm text-gray-600 mt-6">
+          <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
             {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button
               onClick={() => {
