@@ -16,12 +16,17 @@ export function Login() {
     setError('');
     setLoading(true);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, isSignUp: false }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       const data = await response.json();
 
       if (!response.ok) {
@@ -34,8 +39,23 @@ export function Login() {
       setToken(data.token);
       setEmail('');
       setPassword('');
-    } catch (err) {
-      setError('Connection error. Check if backend is running.');
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        setError('Request timeout. MongoDB might not be configured. Using demo mode.');
+        // Fallback to demo user
+        setCurrentUser({
+          id: 'demo-' + Date.now(),
+          username: email.split('@')[0],
+          email: email,
+          avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 100)}`,
+          bio: 'Demo User',
+          followers: [],
+          following: [],
+          createdAt: new Date().toISOString(),
+        });
+      } else {
+        setError('Connection error. Make sure MongoDB is configured on Vercel.');
+      }
       console.error(err);
     }
     setLoading(false);
@@ -50,12 +70,17 @@ export function Login() {
 
     setLoading(true);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, username, password, isSignUp: true }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       const data = await response.json();
 
       if (!response.ok) {
@@ -69,8 +94,23 @@ export function Login() {
       setEmail('');
       setUsername('');
       setPassword('');
-    } catch (err) {
-      setError('Connection error. Check if backend is running.');
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        setError('Request timeout. MongoDB might not be configured. Using demo mode.');
+        // Fallback to demo user
+        setCurrentUser({
+          id: 'demo-' + Date.now(),
+          username: username,
+          email: email,
+          avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 100)}`,
+          bio: '',
+          followers: [],
+          following: [],
+          createdAt: new Date().toISOString(),
+        });
+      } else {
+        setError('Connection error. Make sure MongoDB is configured on Vercel.');
+      }
       console.error(err);
     }
     setLoading(false);
