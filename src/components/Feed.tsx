@@ -30,7 +30,7 @@ export function Feed() {
   return (
     <div className="space-y-4">
       {posts.map((post) => (
-        <div key={post.id} className="bg-white rounded-lg shadow p-4 border border-gray-200">
+        <div key={post.id} className="bg-white dark:bg-slate-900 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 transition-colors">
           {/* Post Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -40,21 +40,21 @@ export function Feed() {
                 className="w-10 h-10 rounded-full"
               />
               <div>
-                <p className="font-semibold">{post.username}</p>
-                <p className="text-xs text-gray-500">
+                <p className="font-semibold text-black dark:text-white">{post.username}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
                 </p>
               </div>
             </div>
             {currentUser?.id === post.userId && (
-              <button className="text-gray-500 hover:text-red-500">
+              <button className="text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition">
                 <Trash2 size={18} />
               </button>
             )}
           </div>
 
           {/* Post Content */}
-          <p className="mb-3">{post.content}</p>
+          <p className="mb-3 text-gray-800 dark:text-gray-200">{post.content}</p>
           {post.image && (
             <img
               src={post.image}
@@ -64,27 +64,27 @@ export function Feed() {
           )}
 
           {/* Post Stats */}
-          <div className="flex gap-4 text-sm text-gray-500 mb-3 pb-3 border-b">
+          <div className="flex gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
             <span>{post.likes.length + (likedPosts.has(post.id) ? 1 : 0)} likes</span>
             <span>{post.comments.length} comments</span>
           </div>
 
           {/* Post Actions */}
-          <div className="flex gap-4 mb-3 pb-3 border-b">
+          <div className="flex gap-4 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
             <button
               onClick={() => toggleLike(post.id)}
-              className={`flex items-center gap-2 flex-1 justify-center py-2 rounded hover:bg-gray-100 ${
-                likedPosts.has(post.id) ? 'text-red-500' : 'text-gray-600'
+              className={`flex items-center gap-2 flex-1 justify-center py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition ${
+                likedPosts.has(post.id) ? 'text-red-500' : 'text-gray-600 dark:text-gray-400'
               }`}
             >
               <Heart size={18} fill={likedPosts.has(post.id) ? 'currentColor' : 'none'} />
               <span>Like</span>
             </button>
-            <button className="flex items-center gap-2 flex-1 justify-center py-2 rounded hover:bg-gray-100 text-gray-600">
+            <button className="flex items-center gap-2 flex-1 justify-center py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
               <MessageCircle size={18} />
               <span>Comment</span>
             </button>
-            <button className="flex items-center gap-2 flex-1 justify-center py-2 rounded hover:bg-gray-100 text-gray-600">
+            <button className="flex items-center gap-2 flex-1 justify-center py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
               <Share2 size={18} />
               <span>Share</span>
             </button>
@@ -95,8 +95,8 @@ export function Feed() {
             <div className="mb-3 space-y-2">
               {post.comments.map((comment) => (
                 <div key={comment.id} className="text-sm">
-                  <span className="font-semibold">{comment.username}</span>
-                  <span className="text-gray-600"> {comment.text}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{comment.username}</span>
+                  <span className="text-gray-600 dark:text-gray-400"> {comment.text}</span>
                 </div>
               ))}
             </div>

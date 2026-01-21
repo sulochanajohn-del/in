@@ -97,7 +97,7 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 dark:from-blue-900 dark:via-purple-900 dark:to-pink-900 flex items-center justify-center p-4 transition-colors">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -106,13 +106,13 @@ export function Login() {
         </div>
 
         {/* Login Card */}
-        <div className="bg-white rounded-lg shadow-2xl p-8">
-          <h2 className="text-2xl font-bold text-center mb-6">
+        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-2xl p-8 transition-colors">
+          <h2 className="text-2xl font-bold text-center mb-6 text-black dark:text-white">
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </h2>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+            <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-sm">
               {error}
             </div>
           )}
@@ -120,7 +120,7 @@ export function Login() {
           <div className="space-y-4">
             {isSignUp && (
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Username
                 </label>
                 <input
@@ -128,13 +128,13 @@ export function Login() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="john_doe"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-black dark:text-white rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 {isSignUp ? 'Email' : 'Email or Username'}
               </label>
               <input
@@ -142,12 +142,12 @@ export function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={isSignUp ? 'john@example.com' : 'jane@example.com'}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-black dark:text-white rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                 Password
               </label>
               <input
@@ -155,7 +155,7 @@ export function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-black dark:text-white rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
               />
             </div>
 

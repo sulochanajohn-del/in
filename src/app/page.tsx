@@ -34,7 +34,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors">
       <Navigation activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
 
       <main className="max-w-7xl mx-auto px-4 py-6">

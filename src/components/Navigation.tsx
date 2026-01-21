@@ -1,6 +1,7 @@
 'use client';
 
 import { Home, MessageSquare, Search, PlusSquare, User, LogOut } from 'lucide-react';
+import { ThemeToggle } from './ThemeToggle';
 
 interface NavigationProps {
   activeTab: string;
@@ -18,7 +19,7 @@ export function Navigation({ activeTab, setActiveTab, onLogout }: NavigationProp
   ];
 
   return (
-    <nav className="bg-white shadow-lg border-b border-gray-200">
+    <nav className="bg-white dark:bg-slate-900 shadow-lg border-b border-gray-200 dark:border-gray-700 transition-colors">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -38,8 +39,8 @@ export function Navigation({ activeTab, setActiveTab, onLogout }: NavigationProp
                   onClick={() => setActiveTab(tab.id)}
                   className={`p-2 rounded-lg transition flex items-center gap-2 px-3 ${
                     activeTab === tab.id
-                      ? 'bg-blue-100 text-blue-600 font-semibold'
-                      : 'text-gray-600 hover:bg-gray-100'
+                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 font-semibold'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                   title={tab.label}
                 >
@@ -50,11 +51,14 @@ export function Navigation({ activeTab, setActiveTab, onLogout }: NavigationProp
             })}
           </div>
 
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
           {/* Logout Button */}
           {onLogout && (
             <button
               onClick={onLogout}
-              className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-semibold transition"
+              className="flex items-center gap-2 px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg font-semibold transition"
             >
               <LogOut size={20} />
               <span className="hidden sm:inline">Logout</span>
