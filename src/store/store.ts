@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist, PersistStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 
 export interface User {
   id: string;
@@ -21,6 +21,7 @@ export interface Post {
   image?: string;
   likes: string[];
   comments: Comment[];
+  hashtags?: string[];
   createdAt: string;
 }
 
@@ -55,7 +56,9 @@ export interface Message {
 interface AppStore {
   // Auth
   currentUser: User | null;
+  token: string | null;
   setCurrentUser: (user: User | null) => void;
+  setToken: (token: string | null) => void;
 
   // Posts
   posts: Post[];
@@ -87,17 +90,21 @@ export const useStore = create<AppStore>()(
   persist(
     (set) => ({
       currentUser: null,
+      token: null,
       setCurrentUser: (user) => set({ currentUser: user }),
+      setToken: (token) => set({ token }),
 
       posts: [],
       setPosts: (posts) => set({ posts }),
       addPost: (post) => set((state) => ({ posts: [post, ...state.posts] })),
-      updatePost: (postId, post) => set((state) => ({
-        posts: state.posts.map((p) => p.id === postId ? post : p),
-      })),
-      deletePost: (postId) => set((state) => ({
-        posts: state.posts.filter((p) => p.id !== postId),
-      })),
+      updatePost: (postId, post) =>
+        set((state) => ({
+          posts: state.posts.map((p) => (p.id === postId ? post : p)),
+        })),
+      deletePost: (postId) =>
+        set((state) => ({
+          posts: state.posts.filter((p) => p.id !== postId),
+        })),
 
       stories: [],
       setStories: (stories) => set({ stories }),
@@ -105,7 +112,8 @@ export const useStore = create<AppStore>()(
 
       messages: [],
       setMessages: (messages) => set({ messages }),
-      addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
+      addMessage: (message) =>
+        set((state) => ({ messages: [...state.messages, message] })),
 
       users: [],
       setUsers: (users) => set({ users }),
@@ -114,7 +122,7 @@ export const useStore = create<AppStore>()(
       setSelectedChat: (userId) => set({ selectedChat: userId }),
     }),
     {
-      name: 'social-hub-storage',
+      name: 'socialhub-store',
     }
   )
 );
