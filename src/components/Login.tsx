@@ -2,27 +2,32 @@
 
 import { useStore } from '@/store/store';
 import { useState } from 'react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
-export function Login() {
+export default function Login() {
   const { setCurrentUser, setToken } = useStore();
-  const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     setError('');
+    if (!username || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
     setLoading(true);
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, isSignUp: false }),
+        body: JSON.stringify({ username, password, isSignUp: false }),
         signal: controller.signal,
       });
 
@@ -37,33 +42,22 @@ export function Login() {
 
       setCurrentUser(data.user);
       setToken(data.token);
-      setEmail('');
+      setUsername('');
       setPassword('');
     } catch (err: any) {
+      console.error('Login error:', err);
       if (err.name === 'AbortError') {
-        setError('Request timeout. MongoDB might not be configured. Using demo mode.');
-        // Fallback to demo user
-        setCurrentUser({
-          id: 'demo-' + Date.now(),
-          username: email.split('@')[0],
-          email: email,
-          avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 100)}`,
-          bio: 'Demo User',
-          followers: [],
-          following: [],
-          createdAt: new Date().toISOString(),
-        });
+        setError('Request timeout. Please check your connection.');
       } else {
-        setError('Connection error. Make sure MongoDB is configured on Vercel.');
+        setError('Connection error. Make sure the server is running.');
       }
-      console.error(err);
     }
     setLoading(false);
   };
 
   const handleSignUp = async () => {
     setError('');
-    if (!email || !username || !password) {
+    if (!username || !password) {
       setError('Please fill in all fields');
       return;
     }
@@ -71,12 +65,12 @@ export function Login() {
     setLoading(true);
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username, password, isSignUp: true }),
+        body: JSON.stringify({ username, password, isSignUp: true }),
         signal: controller.signal,
       });
 
@@ -91,116 +85,125 @@ export function Login() {
 
       setCurrentUser(data.user);
       setToken(data.token);
-      setEmail('');
       setUsername('');
       setPassword('');
     } catch (err: any) {
+      console.error('Signup error:', err);
       if (err.name === 'AbortError') {
-        setError('Request timeout. MongoDB might not be configured. Using demo mode.');
-        // Fallback to demo user
-        setCurrentUser({
-          id: 'demo-' + Date.now(),
-          username: username,
-          email: email,
-          avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 100)}`,
-          bio: '',
-          followers: [],
-          following: [],
-          createdAt: new Date().toISOString(),
-        });
+        setError('Request timeout. Please check your connection.');
       } else {
-        setError('Connection error. Make sure MongoDB is configured on Vercel.');
+        setError('Connection error. Make sure the server is running.');
       }
-      console.error(err);
     }
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 dark:from-blue-900 dark:via-purple-900 dark:to-pink-900 flex items-center justify-center p-4 transition-colors">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-white mb-2">SocialHub</h1>
-          <p className="text-blue-100">Connect with friends and share your moments</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <h1 className="text-6xl font-black bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent mb-2">
+            IN
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">
+            {isSignUp ? 'Join IN today' : 'Welcome back to IN'}
+          </p>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-lg shadow-2xl p-8 transition-colors">
-          <h2 className="text-2xl font-bold text-center mb-6 text-black dark:text-white">
-            {isSignUp ? 'Create Account' : 'Welcome Back'}
-          </h2>
-
+        {/* Form Container */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8 space-y-6 backdrop-blur-sm border border-gray-100 dark:border-slate-800">
+          {/* Error Message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-sm">
+            <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm font-medium">
               {error}
             </div>
           )}
 
-          <div className="space-y-4">
-            {isSignUp && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="john_doe"
-                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-black dark:text-white rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
-                />
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                {isSignUp ? 'Email' : 'Email or Username'}
-              </label>
+          {/* Username Input */}
+          <div className="relative">
+            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+              Username
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
               <input
                 type="text"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={isSignUp ? 'john@example.com' : 'jane@example.com'}
-                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-black dark:text-white rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                placeholder="john_doe"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={loading}
+                className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 disabled:opacity-50 transition"
               />
             </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-black dark:text-white rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
-              />
-            </div>
-
-            <button
-              onClick={isSignUp ? handleSignUp : handleLogin}
-              disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-lg hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 transition"
-            >
-              {loading ? 'Loading...' : isSignUp ? 'Create Account' : 'Login'}
-            </button>
           </div>
 
-          {/* Toggle SignUp/Login */}
-          <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-6">
+          {/* Password Input */}
+          <div className="relative">
+            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+              Password
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                className="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg text-black dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 disabled:opacity-50 transition"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            onClick={isSignUp ? handleSignUp : handleLogin}
+            disabled={loading}
+            className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-400 text-white font-semibold rounded-lg transition shadow-lg hover:shadow-xl disabled:shadow-none"
+          >
+            {loading ? 'Loading...' : isSignUp ? 'Create Account' : 'Sign In'}
+          </button>
+
+          {/* Divider */}
+          <div className="relative py-2">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300 dark:border-slate-700"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white dark:bg-slate-900 text-gray-500 dark:text-gray-400 text-xs">
+                OR
+              </span>
+            </div>
+          </div>
+
+          {/* Toggle Sign Up / Login */}
+          <p className="text-center text-gray-700 dark:text-gray-300 text-sm">
             {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
             <button
               onClick={() => {
                 setIsSignUp(!isSignUp);
                 setError('');
+                setUsername('');
+                setPassword('');
               }}
-              className="text-blue-500 hover:text-blue-600 font-semibold"
+              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-semibold transition"
             >
-              {isSignUp ? 'Login' : 'Sign Up'}
+              {isSignUp ? 'Sign In' : 'Sign Up'}
             </button>
           </p>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center text-xs text-gray-500 dark:text-gray-400 space-y-2">
+          <p>IN © 2026 - Professional Social Network</p>
         </div>
       </div>
     </div>

@@ -1,14 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { useStore } from '@/store/store';
-import { Heart, MessageCircle, Share2, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useStore } from '@/store/store';
 
-export function Feed() {
-  const { posts, currentUser } = useStore();
+export default function Feed() {
+  const { posts, currentUser, deletePost } = useStore();
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+  const [savedPosts, setSavedPosts] = useState<string[]>([]);
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const [commentText, setCommentText] = useState<{ [key: string]: string }>({});
+  const [commentLikes, setCommentLikes] = useState<Set<string>>(new Set());
 
   const toggleLike = (postId: string) => {
     const newLiked = new Set(likedPosts);
@@ -20,116 +23,259 @@ export function Feed() {
     setLikedPosts(newLiked);
   };
 
-  const handleComment = (postId: string) => {
-    if (commentText[postId]?.trim()) {
-      setCommentText({ ...commentText, [postId]: '' });
-      // Comment added (would be saved to store in real app)
+  const toggleSavePost = (postId: string) => {
+    setSavedPosts(prev =>
+      prev.includes(postId) ? prev.filter(id => id !== postId) : [...prev, postId]
+    );
+  };
+
+  const toggleExpandComments = (postId: string) => {
+    const newExpanded = new Set(expandedComments);
+    if (newExpanded.has(postId)) {
+      newExpanded.delete(postId);
+    } else {
+      newExpanded.add(postId);
     }
+    setExpandedComments(newExpanded);
   };
 
   return (
-    <div className="space-y-4">
-      {posts.map((post) => (
-        <div key={post.id} className="bg-white dark:bg-slate-900 rounded-lg shadow p-4 border border-gray-200 dark:border-gray-700 transition-colors">
-          {/* Post Header */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <img
-                src={post.avatar || 'https://i.pravatar.cc/150'}
-                alt={post.username}
-                className="w-10 h-10 rounded-full"
-              />
-              <div>
-                <p className="font-semibold text-black dark:text-white">{post.username}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
-                </p>
+    <div className="space-y-6 pb-8">
+      {posts && posts.length > 0 ? (
+        posts.map((post) => (
+          <div
+            key={post.id}
+            className="bg-white dark:bg-black border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden"
+          >
+            {/* Post Header */}
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src={post.avatar || 'https://i.pravatar.cc/150?img=1'}
+                  alt={post.username || 'User'}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-semibold text-sm text-black dark:text-white">
+                    {post.username || 'Unknown User'}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {post.createdAt
+                      ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })
+                      : 'Just now'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full transition">
+                  <MoreHorizontal size={20} className="text-gray-700 dark:text-gray-300" />
+                </button>
+                {currentUser?.id === post.userId && (
+                  <button
+                    onClick={() => deletePost(post.id)}
+                    className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition text-red-600 dark:text-red-400"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                )}
               </div>
             </div>
-            {currentUser?.id === post.userId && (
-              <button className="text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition">
-                <Trash2 size={18} />
-              </button>
-            )}
-          </div>
 
-          {/* Post Content */}
-          <p className="mb-3 text-gray-800 dark:text-gray-200">{post.content}</p>
-          {post.image && (
-            <img
-              src={post.image}
-              alt="Post"
-              className="w-full rounded-lg mb-3 object-cover max-h-96"
-            />
-          )}
-
-          {/* Post Stats */}
-          <div className="flex gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-            <span>{post.likes.length + (likedPosts.has(post.id) ? 1 : 0)} likes</span>
-            <span>{post.comments.length} comments</span>
-          </div>
-
-          {/* Post Actions */}
-          <div className="flex gap-4 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => toggleLike(post.id)}
-              className={`flex items-center gap-2 flex-1 justify-center py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition ${
-                likedPosts.has(post.id) ? 'text-red-500' : 'text-gray-600 dark:text-gray-400'
-              }`}
-            >
-              <Heart size={18} fill={likedPosts.has(post.id) ? 'currentColor' : 'none'} />
-              <span>Like</span>
-            </button>
-            <button className="flex items-center gap-2 flex-1 justify-center py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
-              <MessageCircle size={18} />
-              <span>Comment</span>
-            </button>
-            <button className="flex items-center gap-2 flex-1 justify-center py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
-              <Share2 size={18} />
-              <span>Share</span>
-            </button>
-          </div>
-
-          {/* Comments */}
-          {post.comments.length > 0 && (
-            <div className="mb-3 space-y-2">
-              {post.comments.map((comment) => (
-                <div key={comment.id} className="text-sm">
-                  <span className="font-semibold text-gray-900 dark:text-white">{comment.username}</span>
-                  <span className="text-gray-600 dark:text-gray-400"> {comment.text}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Comment Input */}
-          {currentUser && (
-            <div className="flex gap-2">
+            {/* Post Image */}
+            {post.image && (
               <img
-                src={currentUser.avatar || 'https://i.pravatar.cc/150'}
-                alt="Your avatar"
-                className="w-8 h-8 rounded-full"
+                src={post.image}
+                alt="Post"
+                className="w-full object-cover max-h-96"
               />
-              <div className="flex-1 flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Add a comment..."
-                  value={commentText[post.id] || ''}
-                  onChange={(e) => setCommentText({ ...commentText, [post.id]: e.target.value })}
-                  onKeyPress={(e) => e.key === 'Enter' && handleComment(post.id)}
-                  className="flex-1 px-3 py-2 bg-gray-100 rounded-full text-sm outline-none"
-                />
+            )}
+
+            {/* Post Actions */}
+            <div className="p-4">
+              <div className="flex gap-2 mb-4 text-gray-800 dark:text-gray-200">
                 <button
-                  onClick={() => handleComment(post.id)}
-                  className="text-blue-500 hover:text-blue-600 font-semibold"
+                  onClick={() => toggleLike(post.id)}
+                  className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900 transition ${
+                    likedPosts.has(post.id) ? 'text-red-500' : 'text-gray-700 dark:text-gray-300'
+                  }`}
                 >
-                  Post
+                  <Heart
+                    size={24}
+                    fill={likedPosts.has(post.id) ? 'currentColor' : 'none'}
+                    strokeWidth={1.5}
+                  />
+                </button>
+                <button
+                  onClick={() => toggleExpandComments(post.id)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg transition text-gray-700 dark:text-gray-300"
+                >
+                  <MessageCircle size={24} strokeWidth={1.5} />
+                </button>
+                <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg transition text-gray-700 dark:text-gray-300">
+                  <Share2 size={24} strokeWidth={1.5} />
+                </button>
+                <button
+                  onClick={() => toggleSavePost(post.id)}
+                  className={`ml-auto p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg transition ${
+                    savedPosts.includes(post.id)
+                      ? 'text-black dark:text-white'
+                      : 'text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  <Bookmark
+                    size={24}
+                    fill={savedPosts.includes(post.id) ? 'currentColor' : 'none'}
+                    strokeWidth={1.5}
+                  />
                 </button>
               </div>
+
+              {/* Likes Count */}
+              <p className="font-semibold text-sm text-black dark:text-white mb-3">
+                {(post.likes?.length || 0) + (likedPosts.has(post.id) ? 1 : 0)}{' '}
+                {(post.likes?.length || 0) + (likedPosts.has(post.id) ? 1 : 0) === 1
+                  ? 'like'
+                  : 'likes'}
+              </p>
+
+              {/* Post Content */}
+              <div className="mb-3">
+                <p className="text-sm text-black dark:text-white">
+                  <span className="font-semibold mr-2">{post.username}</span>
+                  {post.content}
+                </p>
+                {post.hashtags && post.hashtags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {post.hashtags.map((tag: string) => (
+                      <a
+                        key={tag}
+                        href="#"
+                        className="text-blue-500 hover:text-blue-600 text-sm"
+                      >
+                        #{tag}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Comments Toggle */}
+              {post.comments && post.comments.length > 0 && !expandedComments.has(post.id) && (
+                <button
+                  onClick={() => toggleExpandComments(post.id)}
+                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white mb-3 font-medium transition"
+                >
+                  View all {post.comments.length}{' '}
+                  {post.comments.length === 1 ? 'comment' : 'comments'}
+                </button>
+              )}
             </div>
-          )}
+
+            {/* Comments Section */}
+            {expandedComments.has(post.id) && (
+              <>
+                {post.comments && post.comments.length > 0 && (
+                  <div className="border-t border-gray-200 dark:border-gray-800 px-4 py-3 space-y-3 max-h-60 overflow-y-auto bg-gray-50 dark:bg-gray-900/30">
+                    {post.comments.map((comment: any) => (
+                      <div key={comment.id} className="text-sm flex gap-2 group">
+                        <img
+                          src={comment.avatar || 'https://i.pravatar.cc/150'}
+                          alt={comment.username}
+                          className="w-6 h-6 rounded-full flex-shrink-0 object-cover"
+                        />
+                        <div className="flex-1">
+                          <span className="font-semibold text-black dark:text-white">
+                            {comment.username}
+                          </span>
+                          <span className="text-gray-800 dark:text-gray-200 ml-2">
+                            {comment.text}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            const newLikes = new Set(commentLikes);
+                            if (newLikes.has(comment.id)) {
+                              newLikes.delete(comment.id);
+                            } else {
+                              newLikes.add(comment.id);
+                            }
+                            setCommentLikes(newLikes);
+                          }}
+                          className={`opacity-0 group-hover:opacity-100 transition flex-shrink-0 ${
+                            commentLikes.has(comment.id)
+                              ? 'text-red-500'
+                              : 'text-gray-400 hover:text-red-500'
+                          }`}
+                        >
+                          <Heart
+                            size={14}
+                            fill={commentLikes.has(comment.id) ? 'currentColor' : 'none'}
+                            strokeWidth={2}
+                          />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Comment Input */}
+                {currentUser && (
+                  <div className="border-t border-gray-200 dark:border-gray-800 flex gap-2 p-4 bg-gray-50 dark:bg-gray-900/30">
+                    <img
+                      src={currentUser.avatar || 'https://i.pravatar.cc/150'}
+                      alt="Your avatar"
+                      className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
+                    />
+                    <div className="flex-1 flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Add a comment..."
+                        value={commentText[post.id] || ''}
+                        onChange={(e) =>
+                          setCommentText({
+                            ...commentText,
+                            [post.id]: e.target.value,
+                          })
+                        }
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && commentText[post.id]?.trim()) {
+                            setCommentText({
+                              ...commentText,
+                              [post.id]: '',
+                            });
+                          }
+                        }}
+                        className="flex-1 bg-transparent text-black dark:text-white text-sm outline-none placeholder-gray-500 dark:placeholder-gray-400"
+                      />
+                      <button
+                        onClick={() => {
+                          if (commentText[post.id]?.trim()) {
+                            setCommentText({
+                              ...commentText,
+                              [post.id]: '',
+                            });
+                          }
+                        }}
+                        className="text-blue-500 hover:text-blue-600 font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!commentText[post.id]?.trim()}
+                      >
+                        Post
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        ))
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-gray-500 dark:text-gray-400 text-lg">No posts yet</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
+            Follow users to see their posts
+          </p>
         </div>
-      ))}
+      )}
     </div>
   );
 }

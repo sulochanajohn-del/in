@@ -1,18 +1,40 @@
 'use client';
 
 import { useStore } from '@/store/store';
-import { Edit, LogOut, Users, Image as ImageIcon } from 'lucide-react';
-import { useState } from 'react';
+import { Edit2, LogOut, Camera, Lock, Globe, MessageSquare, Share2, Link as LinkIcon, MoreHorizontal } from 'lucide-react';
+import { useState, useRef } from 'react';
 
 export function Profile() {
-  const { currentUser, posts, setCurrentUser } = useStore();
+  const { currentUser, posts, setCurrentUser, togglePrivateAccount, updateUserProfile } = useStore();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     username: currentUser?.username || '',
     bio: currentUser?.bio || '',
+    website: currentUser?.website || '',
+    pronouns: currentUser?.pronouns || '',
   });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const userPosts = posts.filter((p) => p.userId === currentUser?.id);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string;
+        if (currentUser) {
+          const updated = {
+            ...currentUser,
+            avatar: dataUrl,
+          };
+          setCurrentUser(updated);
+          updateUserProfile(updated);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSave = () => {
     if (currentUser) {
@@ -20,148 +42,257 @@ export function Profile() {
         ...currentUser,
         username: editData.username,
         bio: editData.bio,
+        website: editData.website,
+        pronouns: editData.pronouns,
       };
-      setCurrentUser(updatedUser);
-      
-      // Update user in users list
-      const updatedUsers = posts.length > 0 
-        ? [] 
-        : [];
+      updateUserProfile(updatedUser);
       setIsEditing(false);
     }
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
+  const handleTogglePrivate = () => {
+    if (currentUser) {
+      togglePrivateAccount(currentUser.id);
+      const updated = { ...currentUser, isPrivate: !currentUser.isPrivate };
+      setCurrentUser(updated);
+    }
   };
 
   if (!currentUser) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="max-w-4xl mx-auto">
       {/* Profile Header */}
-      <div className="bg-white dark:bg-slate-900 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700 transition-colors">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-start gap-4">
-            <img
-              src={currentUser.avatar || 'https://i.pravatar.cc/150'}
-              alt={currentUser.username}
-              className="w-24 h-24 rounded-full"
-            />
-            <div className="flex-1">
-              {isEditing ? (
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={editData.username}
-                    onChange={(e) => setEditData({ ...editData, username: e.target.value })}
-                    className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-black dark:text-white rounded-lg transition-colors"
-                    placeholder="Username"
-                  />
-                  <textarea
-                    value={editData.bio}
-                    onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
-                    className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 text-black dark:text-white rounded-lg transition-colors"
-                    placeholder="Bio"
-                    rows={3}
-                  />
-                  <div className="flex gap-2">
+      <div className="border-b border-gray-200 dark:border-gray-800 pb-6 mb-6">
+        <div className="flex flex-col md:flex-row gap-12 mb-6">
+          {/* Avatar */}
+          <div className="flex-shrink-0">
+            <div className="relative group w-32 h-32 md:w-48 md:h-48 mx-auto md:mx-0">
+              <img
+                src={currentUser.avatar || 'https://i.pravatar.cc/150'}
+                alt={currentUser.username}
+                className="w-full h-full rounded-full object-cover border-2 border-gray-200 dark:border-gray-800"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute inset-0 bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 transition flex items-center justify-center"
+              >
+                <Camera size={32} />
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                hidden
+              />
+            </div>
+          </div>
+
+          {/* Info Section */}
+          <div className="flex-1">
+            {/* Header Row */}
+            <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6">
+              <h1 className="text-2xl md:text-3xl font-light text-black dark:text-white">
+                {currentUser.username}
+              </h1>
+              <div className="flex gap-2">
+                {isEditing ? (
+                  <>
                     <button
                       onClick={handleSave}
-                      className="px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
+                      className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm rounded-lg transition"
                     >
                       Save
                     </button>
                     <button
                       onClick={() => setIsEditing(false)}
-                      className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
+                      className="px-6 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white font-semibold text-sm rounded-lg transition hover:bg-gray-300 dark:hover:bg-gray-700"
                     >
                       Cancel
                     </button>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <h1 className="text-2xl font-bold text-black dark:text-white">{currentUser.username}</h1>
-                  <p className="text-gray-600 dark:text-gray-400">{currentUser.bio}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                    {currentUser.email}
-                  </p>
-                </div>
-              )}
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="px-6 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white font-semibold text-sm rounded-lg transition hover:bg-gray-300 dark:hover:bg-gray-700 flex items-center gap-2"
+                    >
+                      <Edit2 size={16} />
+                      Edit Profile
+                    </button>
+                    <button className="px-6 py-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white font-semibold text-sm rounded-lg transition hover:bg-gray-300 dark:hover:bg-gray-700">
+                      Share Profile
+                    </button>
+                    <button className="p-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white rounded-lg transition hover:bg-gray-300 dark:hover:bg-gray-700">
+                      <MoreHorizontal size={20} />
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="flex gap-2">
-            {!isEditing && (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                <Edit size={18} />
-                Edit Profile
-              </button>
-            )}
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-            >
-              <LogOut size={18} />
-              Logout
-            </button>
-          </div>
-        </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-          <div className="text-center">
-            <p className="text-2xl font-bold">{userPosts.length}</p>
-            <p className="text-gray-600">Posts</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold">{currentUser.followers.length}</p>
-            <p className="text-gray-600">Followers</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold">{currentUser.following.length}</p>
-            <p className="text-gray-600">Following</p>
-          </div>
-        </div>
-      </div>
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-6 mb-6 md:gap-8">
+              <div className="text-center md:text-left">
+                <p className="text-2xl font-bold text-black dark:text-white">{userPosts.length}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">posts</p>
+              </div>
+              <div className="text-center md:text-left">
+                <p className="text-2xl font-bold text-black dark:text-white">{currentUser.followers.length}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">followers</p>
+              </div>
+              <div className="text-center md:text-left">
+                <p className="text-2xl font-bold text-black dark:text-white">{currentUser.following.length}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">following</p>
+              </div>
+            </div>
 
-      {/* Posts Grid */}
-      <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-        <div className="flex items-center gap-2 mb-4">
-          <ImageIcon size={20} />
-          <h2 className="text-xl font-bold">Posts</h2>
-        </div>
-        {userPosts.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No posts yet</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {userPosts.map((post) => (
-              <div key={post.id} className="relative group cursor-pointer overflow-hidden rounded-lg">
-                <img
-                  src={post.image || 'https://via.placeholder.com/300x300'}
-                  alt="Post"
-                  className="w-full aspect-square object-cover group-hover:brightness-75 transition"
-                />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition bg-black/40">
-                  <div className="flex gap-4 text-white">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold">{post.likes.length}</p>
-                      <p className="text-sm">Likes</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold">{post.comments.length}</p>
-                      <p className="text-sm">Comments</p>
-                    </div>
-                  </div>
+            {/* Bio Section */}
+            {isEditing ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Full Name</label>
+                  <input
+                    type="text"
+                    value={editData.username}
+                    onChange={(e) => setEditData({ ...editData, username: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-black dark:text-white text-sm rounded outline-none focus:border-gray-400"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Bio</label>
+                  <textarea
+                    value={editData.bio}
+                    onChange={(e) => setEditData({ ...editData, bio: e.target.value })}
+                    placeholder="Tell us about yourself..."
+                    className="w-full mt-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-black dark:text-white text-sm rounded outline-none focus:border-gray-400"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Website</label>
+                  <input
+                    type="url"
+                    value={editData.website}
+                    onChange={(e) => setEditData({ ...editData, website: e.target.value })}
+                    placeholder="https://example.com"
+                    className="w-full mt-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-black dark:text-white text-sm rounded outline-none focus:border-gray-400"
+                  />
                 </div>
               </div>
-            ))}
+            ) : (
+              <>
+                {currentUser.bio && (
+                  <p className="text-sm text-black dark:text-white mb-3">{currentUser.bio}</p>
+                )}
+                {currentUser.website && (
+                  <a
+                    href={currentUser.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-blue-500 hover:text-blue-600 text-sm font-semibold mb-3"
+                  >
+                    <LinkIcon size={14} />
+                    {currentUser.website}
+                  </a>
+                )}
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  {currentUser.isPrivate ? (
+                    <>
+                      <Lock size={14} />
+                      <span>Private Account</span>
+                    </>
+                  ) : (
+                    <>
+                      <Globe size={14} />
+                      <span>Public Account</span>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Account Privacy Card */}
+        {!isEditing && (
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {currentUser.isPrivate ? (
+                <Lock size={20} className="text-gray-700 dark:text-gray-300" />
+              ) : (
+                <Globe size={20} className="text-gray-700 dark:text-gray-300" />
+              )}
+              <div>
+                <p className="font-semibold text-black dark:text-white text-sm">
+                  {currentUser.isPrivate ? 'Private Account' : 'Public Account'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleTogglePrivate}
+              className="px-6 py-1.5 text-blue-500 hover:text-blue-600 font-semibold text-sm transition"
+            >
+              {currentUser.isPrivate ? 'Make Public' : 'Make Private'}
+            </button>
           </div>
         )}
       </div>
+
+      {/* Tabs */}
+      <div className="border-b border-gray-200 dark:border-gray-800 mb-6 flex gap-8 overflow-x-auto">
+        <button className="py-3 px-1 border-b-2 border-black dark:border-white font-semibold text-black dark:text-white">
+          Posts
+        </button>
+        <button className="py-3 px-1 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white font-semibold transition">
+          Reels
+        </button>
+        <button className="py-3 px-1 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white font-semibold transition">
+          Tagged
+        </button>
+      </div>
+
+      {/* Posts Grid */}
+      {userPosts.length > 0 ? (
+        <div className="grid grid-cols-3 gap-1 md:gap-3">
+          {userPosts.map((post) => (
+            <div
+              key={post.id}
+              className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900 overflow-hidden group cursor-pointer rounded"
+            >
+              {post.image ? (
+                <img
+                  src={post.image}
+                  alt="Post"
+                  className="w-full h-full object-cover group-hover:brightness-75 transition duration-200"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-800">
+                  <p className="text-center px-2 text-gray-600 dark:text-gray-400 line-clamp-2 text-xs">
+                    {post.content}
+                  </p>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition flex items-center justify-center gap-8 opacity-0 group-hover:opacity-100">
+                <div className="text-white text-center flex items-center gap-2 font-bold">
+                  <span>❤️</span>
+                  <span>{post.likes.length}</span>
+                </div>
+                <div className="text-white text-center flex items-center gap-2 font-bold">
+                  <span>💬</span>
+                  <span>{post.comments.length}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-20">
+          <p className="text-lg font-semibold text-black dark:text-white mb-2">No posts yet</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Share a post to get started</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { useStore } from '@/store/store';
-import { Send, Paperclip } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Send, Paperclip, Phone, Video, Info, Search as SearchIcon, Edit2 } from 'lucide-react';
 
 export function Messages() {
-  const { messages, users, currentUser, selectedChat, setSelectedChat } = useStore();
+  const { messages, users, currentUser, selectedChat, setSelectedChat, addMessage } = useStore();
   const [messageText, setMessageText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredMessages = messages.filter(
     (msg) =>
@@ -17,120 +17,192 @@ export function Messages() {
 
   const selectedUser = users.find((u) => u.id === selectedChat);
 
+  const userList = users.filter(
+    (u) => u.id !== currentUser?.id && (!searchQuery || u.username.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
   const handleSendMessage = () => {
-    if (messageText.trim() && selectedChat) {
+    if (messageText.trim() && selectedChat && currentUser) {
+      const newMessage = {
+        id: Date.now().toString(),
+        senderId: currentUser.id,
+        recipientId: selectedChat,
+        text: messageText,
+        createdAt: new Date().toISOString(),
+        read: false,
+      };
+      addMessage(newMessage);
       setMessageText('');
     }
   };
 
   return (
-    <div className="flex h-[calc(100vh-80px)] bg-white dark:bg-slate-900 rounded-lg shadow transition-colors">
-      {/* Users List */}
-      <div className="w-80 border-r border-gray-200 dark:border-gray-700 overflow-y-auto transition-colors">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 transition-colors">
-          <h2 className="text-xl font-bold text-black dark:text-white">Messages</h2>
+    <div className="flex h-screen bg-white dark:bg-black">
+      {/* Conversations List */}
+      <div className="w-96 border-r border-gray-200 dark:border-gray-800 flex flex-col hidden md:flex">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-black text-black dark:text-white">{currentUser?.username}</h1>
+            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full transition">
+              <Edit2 size={20} className="text-black dark:text-white" />
+            </button>
+          </div>
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search conversations..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full text-black dark:text-white text-sm outline-none focus:border-gray-400 dark:focus:border-gray-600"
+            />
+          </div>
         </div>
-        <div className="space-y-2">
-          {users
-            .filter((u) => u.id !== currentUser?.id)
-            .map((user) => (
-              <button
-                key={user.id}
-                onClick={() => setSelectedChat(user.id)}
-                className={`w-full p-3 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-slate-800 border-l-4 transition-colors ${
-                  selectedChat === user.id
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-transparent'
-                }`}
-              >
-                <img
-                  src={user.avatar || 'https://i.pravatar.cc/150'}
-                  alt={user.username}
-                  className="w-10 h-10 rounded-full"
-                />
-                <div className="text-left">
-                  <p className="font-semibold text-sm text-black dark:text-white">{user.username}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Online</p>
-                </div>
-              </button>
-            ))}
+
+        <div className="flex-1 overflow-y-auto">
+          {userList.length > 0 ? (
+            <div className="space-y-0">
+              {userList.map((user) => (
+                <button
+                  key={user.id}
+                  onClick={() => setSelectedChat(user.id)}
+                  className={`w-full p-3 flex items-center gap-3 transition-colors text-left border-l-4 ${
+                    selectedChat === user.id
+                      ? 'border-black dark:border-white bg-gray-50 dark:bg-gray-900'
+                      : 'border-transparent hover:bg-gray-50 dark:hover:bg-gray-900'
+                  }`}
+                >
+                  <div className="relative flex-shrink-0">
+                    <img
+                      src={user.avatar || 'https://i.pravatar.cc/150'}
+                      alt={user.username}
+                      className="w-14 h-14 rounded-full"
+                    />
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-black"></div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-black dark:text-white truncate">{user.username}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Active now</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full py-12">
+              <p className="text-gray-500 dark:text-gray-400">No conversations found</p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {selectedUser ? (
-          <>
-            {/* Chat Header */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-3 transition-colors">
+      {selectedChat && selectedUser ? (
+        <div className="flex-1 flex flex-col">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between sticky top-0 bg-white dark:bg-black z-10">
+            <div className="flex items-center gap-3">
               <img
                 src={selectedUser.avatar || 'https://i.pravatar.cc/150'}
                 alt={selectedUser.username}
-                className="w-10 h-10 rounded-full"
+                className="w-12 h-12 rounded-full"
               />
               <div>
                 <p className="font-semibold text-black dark:text-white">{selectedUser.username}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Active now</p>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full transition">
+                <Phone size={20} className="text-black dark:text-white" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full transition">
+                <Video size={20} className="text-black dark:text-white" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full transition">
+                <Info size={20} className="text-black dark:text-white" />
+              </button>
+            </div>
+          </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-slate-800 transition-colors">
-              {filteredMessages.map((msg) => (
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white dark:bg-black">
+            {filteredMessages.length > 0 ? (
+              filteredMessages.map((msg) => (
                 <div
                   key={msg.id}
                   className={`flex ${msg.senderId === currentUser?.id ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-xs px-4 py-2 rounded-lg ${
+                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-3xl ${
                       msg.senderId === currentUser?.id
-                        ? 'bg-blue-500 dark:bg-blue-600 text-white'
-                        : 'bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-white'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-200 dark:bg-gray-800 text-black dark:text-white'
                     }`}
                   >
                     {msg.image && (
                       <img
                         src={msg.image}
                         alt="Message"
-                        className="rounded mb-2 max-h-32"
+                        className="mb-2 max-h-48 rounded-xl"
                       />
                     )}
-                    <p>{msg.text}</p>
-                    <p className="text-xs opacity-70 mt-1">
-                      {formatDistanceToNow(new Date(msg.createdAt))}
-                    </p>
+                    <p className="text-sm break-words">{msg.text}</p>
                   </div>
                 </div>
-              ))}
-            </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full">
+                <img
+                  src={selectedUser.avatar || 'https://i.pravatar.cc/150'}
+                  alt={selectedUser.username}
+                  className="w-20 h-20 rounded-full mb-4"
+                />
+                <p className="font-semibold text-black dark:text-white mb-1">
+                  {selectedUser.username}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Instagram User
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+                  Start your conversation
+                </p>
+              </div>
+            )}
+          </div>
 
-            {/* Message Input */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex gap-2 transition-colors">
-              <button className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full text-gray-600 dark:text-gray-400 transition-colors">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex gap-3 items-center">
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full transition text-black dark:text-white">
                 <Paperclip size={20} />
               </button>
               <input
                 type="text"
-                placeholder="Type a message..."
+                placeholder="Aa"
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-slate-700 text-black dark:text-white rounded-full outline-none transition-colors placeholder:text-gray-500 dark:placeholder:text-gray-400"
+                className="flex-1 bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-full px-4 py-2 text-black dark:text-white text-sm outline-none focus:border-gray-400 dark:focus:border-gray-600"
               />
               <button
                 onClick={handleSendMessage}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-full text-blue-500 dark:text-blue-400 transition-colors"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full transition text-blue-500 disabled:text-gray-400"
+                disabled={!messageText.trim()}
               >
-                <Send size={20} />
+                <Send size={20} strokeWidth={2} />
               </button>
             </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400 transition-colors">
-            <p>Select a conversation to start messaging</p>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-black dark:text-white mb-2">
+              Your messages
+            </p>
+            <p className="text-gray-500 dark:text-gray-400">
+              Send a message to start a conversation
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

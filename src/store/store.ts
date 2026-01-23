@@ -7,8 +7,14 @@ export interface User {
   email: string;
   avatar?: string;
   bio?: string;
+  website?: string;
+  pronouns?: string;
+  isPrivate: boolean;
   followers: string[];
   following: string[];
+  blockedUsers: string[];
+  followRequests: string[];
+  postsCount: number;
   createdAt: string;
 }
 
@@ -22,6 +28,8 @@ export interface Post {
   likes: string[];
   comments: Comment[];
   hashtags?: string[];
+  taggedUsers?: string[];
+  isPublic: boolean;
   createdAt: string;
 }
 
@@ -30,7 +38,31 @@ export interface Comment {
   userId: string;
   username: string;
   text: string;
+  likes: string[];
   createdAt: string;
+}
+
+export interface Reel {
+  id: string;
+  userId: string;
+  username: string;
+  avatar?: string;
+  video: string; // base64 or URL
+  caption?: string;
+  likes: string[];
+  comments: Comment[];
+  createdAt: string;
+}
+
+export interface Notification {
+  id: string;
+  type: 'like' | 'comment' | 'follow' | 'tag' | 'share';
+  fromUser: string;
+  toUser: string;
+  postId?: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
 }
 
 export interface Story {
@@ -66,6 +98,19 @@ interface AppStore {
   addPost: (post: Post) => void;
   updatePost: (postId: string, post: Post) => void;
   deletePost: (postId: string) => void;
+  toggleSavePost: (postId: string) => void;
+  savedPosts: string[];
+
+  // Reels
+  reels: Reel[];
+  setReels: (reels: Reel[]) => void;
+  addReel: (reel: Reel) => void;
+
+  // Notifications
+  notifications: Notification[];
+  setNotifications: (notifications: Notification[]) => void;
+  addNotification: (notification: Notification) => void;
+  markNotificationAsRead: (notificationId: string) => void;
 
   // Stories
   stories: Story[];
@@ -80,6 +125,12 @@ interface AppStore {
   // Users
   users: User[];
   setUsers: (users: User[]) => void;
+  toggleFollow: (targetUserId: string) => void;
+  togglePrivateAccount: (userId: string) => void;
+  blockUser: (userId: string) => void;
+  unblockUser: (userId: string) => void;
+  respondToFollowRequest: (userId: string, accept: boolean) => void;
+  updateUserProfile: (user: User) => void;
 
   // UI
   selectedChat: string | null;
@@ -105,6 +156,28 @@ export const useStore = create<AppStore>()(
         set((state) => ({
           posts: state.posts.filter((p) => p.id !== postId),
         })),
+      savedPosts: [],
+      toggleSavePost: (postId) =>
+        set((state) => ({
+          savedPosts: state.savedPosts.includes(postId)
+            ? state.savedPosts.filter((id) => id !== postId)
+            : [...state.savedPosts, postId],
+        })),
+
+      reels: [],
+      setReels: (reels) => set({ reels }),
+      addReel: (reel) => set((state) => ({ reels: [reel, ...state.reels] })),
+
+      notifications: [],
+      setNotifications: (notifications) => set({ notifications }),
+      addNotification: (notification) =>
+        set((state) => ({ notifications: [notification, ...state.notifications] })),
+      markNotificationAsRead: (notificationId) =>
+        set((state) => ({
+          notifications: state.notifications.map((n) =>
+            n.id === notificationId ? { ...n, read: true } : n
+          ),
+        })),
 
       stories: [],
       setStories: (stories) => set({ stories }),
@@ -117,6 +190,79 @@ export const useStore = create<AppStore>()(
 
       users: [],
       setUsers: (users) => set({ users }),
+      toggleFollow: (targetUserId) =>
+        set((state) => {
+          if (!state.currentUser) return state;
+          const targetUser = state.users.find((u) => u.id === targetUserId);
+          if (!targetUser) return state;
+
+          const isFollowing = state.currentUser.following.includes(targetUserId);
+          const updatedUser = {
+            ...state.currentUser,
+            following: isFollowing
+              ? state.currentUser.following.filter((id) => id !== targetUserId)
+              : [...state.currentUser.following, targetUserId],
+          };
+
+          return {
+            currentUser: updatedUser,
+            users: state.users.map((u) =>
+              u.id === targetUserId
+                ? {
+                    ...u,
+                    followers: isFollowing
+                      ? u.followers.filter((id) => id !== state.currentUser!.id)
+                      : [...u.followers, state.currentUser!.id],
+                  }
+                : u
+            ),
+          };
+        }),
+      togglePrivateAccount: (userId) =>
+        set((state) => ({
+          users: state.users.map((u) =>
+            u.id === userId ? { ...u, isPrivate: !u.isPrivate } : u
+          ),
+          currentUser:
+            state.currentUser?.id === userId
+              ? { ...state.currentUser, isPrivate: !state.currentUser.isPrivate }
+              : state.currentUser,
+        })),
+      blockUser: (userId) =>
+        set((state) => ({
+          currentUser: state.currentUser
+            ? {
+                ...state.currentUser,
+                blockedUsers: [...(state.currentUser.blockedUsers || []), userId],
+              }
+            : null,
+        })),
+      unblockUser: (userId) =>
+        set((state) => ({
+          currentUser: state.currentUser
+            ? {
+                ...state.currentUser,
+                blockedUsers: state.currentUser.blockedUsers.filter((id) => id !== userId),
+              }
+            : null,
+        })),
+      respondToFollowRequest: (userId, accept) =>
+        set((state) => ({
+          currentUser: state.currentUser
+            ? {
+                ...state.currentUser,
+                followRequests: state.currentUser.followRequests.filter((id) => id !== userId),
+                followers: accept
+                  ? [...state.currentUser.followers, userId]
+                  : state.currentUser.followers,
+              }
+            : null,
+        })),
+      updateUserProfile: (user) =>
+        set((state) => ({
+          currentUser: state.currentUser?.id === user.id ? user : state.currentUser,
+          users: state.users.map((u) => (u.id === user.id ? user : u)),
+        })),
 
       selectedChat: null,
       setSelectedChat: (userId) => set({ selectedChat: userId }),
